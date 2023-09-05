@@ -10,7 +10,7 @@ from gtts import gTTS
 import openai
 
 from flask import Flask, request, render_template, redirect, url_for
-
+openai.api_key = "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"
 
 app = Flask(__name__, static_url_path='/static', static_folder='static')
 app.logger.setLevel(logging.DEBUG)
@@ -178,14 +178,12 @@ def upload_file():
             #wisper AIに食べさせられるように音声ファイルをrb形でopenしておく
             with open(file_path, "rb") as f:
                 #wisper AIに音源データを文字起こしさせる
-                #transcription = openai.Audio.transcribe("whisper-1", f)
-                #txt = transcription['text']
-                txt = "This is a pen"
+                transcription = openai.Audio.transcribe("whisper-1", f)
+                txt = transcription['text']
             #ここで取得した音声データの文字データtxtをベースに推論を実施
 
             from datetime import datetime
             app.logger.debug("現在の日時1s: %s", datetime.now())
-            #pred = 0
             pred = predict(txt)
             app.logger.debug("現在の日時1e: %s", datetime.now())
             category_ = getCategory(pred)
