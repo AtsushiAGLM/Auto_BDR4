@@ -10,7 +10,6 @@ from gtts import gTTS
 import openai
 
 from flask import Flask, request, render_template, redirect, url_for
-openai.api_key = "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"
 
 app = Flask(__name__, static_url_path='/static', static_folder='static')
 app.logger.setLevel(logging.DEBUG)
@@ -74,8 +73,7 @@ def getCategory(response):
 
 def generatedResponse(response):
     if response == 0:
-        return 'お世話'#ここは文字が自然と入るようにしたい
-        #return 'お世話になっております。キカガクのフナクラと申します。担当のXX様はいらっしゃりますでしょうか'#ここは文字が自然と入るようにしたい
+        return 'お世話になっております。キカガクのフナクラと申します。担当のXX様はいらっしゃりますでしょうか'
     elif response == 1:
         return 'ありがとうございます'
     elif response == 2:
@@ -172,32 +170,41 @@ def upload_file():
         if file.filename == '':
             return redirect(request.url)
         if file and allowed_file(file.filename):
+            from datetime import datetime
             filename = secure_filename(file.filename)
             file_path = os.path.join('uploads', filename)
+            app.logger.debug("現在の日時21: %s", datetime.now())
             file.save(file_path)
+            app.logger.debug("現在の日時22: %s", datetime.now())
             #wisper AIに食べさせられるように音声ファイルをrb形でopenしておく
             with open(file_path, "rb") as f:
                 #wisper AIに音源データを文字起こしさせる
+                app.logger.debug("現在の日時23: %s", datetime.now())
                 transcription = openai.Audio.transcribe("whisper-1", f)
+                app.logger.debug("現在の日時24: %s", datetime.now())
                 txt = transcription['text']
-            #ここで取得した音声データの文字データtxtをベースに推論を実施
 
-            from datetime import datetime
-            app.logger.debug("現在の日時1s: %s", datetime.now())
+            #ここで取得した音声データの文字データtxtをベースに推論を実施
+            app.logger.debug("現在の日時25: %s", datetime.now())
             pred = predict(txt)
-            app.logger.debug("現在の日時1e: %s", datetime.now())
+            app.logger.debug("現在の日時26: %s", datetime.now())
             category_ = getCategory(pred)
+            app.logger.debug("現在の日時27: %s", datetime.now())
             generatedResponse_ = generatedResponse(pred)
             # テキストを音声に変換。まずは初回はカテゴリーnameを音声として入れる
-            app.logger.debug("現在の日時2s: %s", datetime.now())
+            app.logger.debug("現在の日時30: %s", datetime.now())
             tts = gTTS(text=generatedResponse_, lang='ja')
-            app.logger.debug("現在の日時2e: %s", datetime.now())
+            app.logger.debug("現在の日時31: %s", datetime.now())
             #ファイル名を動的にユニークに生成→flaskの使用上、音声ファイルはstatic/audioというファイルでやらないとダメ
             file_name = str(uuid.uuid4()) + ".mp3"
+            app.logger.debug("現在の日時32: %s", datetime.now())
             file_path = os.path.join('static/audio', file_name)
+            app.logger.debug("現在の日時33: %s", datetime.now())
 
             # 音声をmp3ファイルとして保存
+            app.logger.debug("現在の日時34: %s", datetime.now())
             tts.save(file_path)
+            app.logger.debug("現在の日時35: %s", datetime.now())
             return render_template('result.html', audio_file_url=url_for('static', filename='audio/' + file_name), category=category_)
 
     elif request.method == 'GET':
@@ -205,5 +212,5 @@ def upload_file():
 
 
 if __name__ == '__main__':
-    app.debug = True
+    app.debug = False
     app.run()
